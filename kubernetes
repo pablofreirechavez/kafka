@@ -27,3 +27,44 @@ $ source /usr/share/ bash-completion / bash_completion
 $  source <(kubectl completion bash)
 
 $  echo 'source <(kubectl completion bash)' >> ~/.bashrc
+
+*********************************************************************
+
+Archivo de configuración de kubectl
+Para acceder al clúster de Kubernetes, el  cliente kubectl necesita el punto final del nodo del plano de control y las credenciales adecuadas para interactuar de forma segura con el servidor API que se ejecuta en dicho nodo. Al iniciar Minikube, el proceso de inicio crea, por defecto, un archivo de configuración, `config` , dentro del directorio `.kube` (a menudo denominado ` kubeconfig` ), que se encuentra en el directorio principal del usuario . Este archivo contiene todos los detalles de conexión necesarios para kubectl . Por defecto, el binario de kubectl analiza este archivo para encontrar el punto final de conexión del nodo del plano de control, junto con las credenciales necesarias. Se pueden configurar varios archivos `kubeconfig` con un único cliente kubectl . Para consultar los detalles de conexión, podemos mostrar el contenido del archivo `~/.kube/config` (en Linux) o ejecutar el siguiente comando (la salida se ha ocultado para facilitar la lectura):
+
+$ kubectl config view
+
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: /home/student/.minikube/ca.crt
+    server: htt‌ps://192.168.99.100:8443
+  name: minikube
+contexts:
+- context:
+    cluster: minikube
+    user: minikube
+  name: minikube
+current-context: minikube
+kind: Config
+preferences: {}
+users:
+- name: minikube
+  user:
+    client-certificate: /home/student/.minikube/ profiles/minikube/ client.crt
+    client-key: /home/student/.minikube/ profiles/minikube/ client.key
+
+El archivo kubeconfig incluye el servidor de punto final del servidor API: https://192.168.99.100:8443 y la clave de autenticación del cliente y los datos del certificado del usuario minikube.
+
+Una vez instalado kubectl , podemos mostrar información sobre el clúster de Kubernetes Minikube con el comando kubectl cluster-info :
+
+$ kubectl cluster-info
+
+El maestro de Kubernetes se está ejecutando en https://192.168.99.100:8443. KubeDNS se está ejecutando en https://192.168.99.100:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy .
+
+Para depurar y diagnosticar mejor los problemas del clúster, utilice 'kubectl cluster-info dump'.
+
+Puedes encontrar más detalles sobre las opciones de línea de comandos de kubectl aquí .
+
+Si bien el archivo ~/.kube/config se crea automáticamente para los clústeres de Kubernetes instalados con Minikube , esto no ocurre con los clústeres de Kubernetes instalados con otras herramientas. En estos últimos casos, es necesario crear el archivo de configuración manualmente y, en ocasiones, reconfigurarlo para adaptarlo a las distintas configuraciones de red y cliente/servidor.
