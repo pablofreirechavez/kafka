@@ -1,0 +1,29 @@
+Instalación de kubectl en Linux
+Para instalar kubectl en Linux, siga las instrucciones que aparecen a continuación, extraídas de la guía de instalación oficial.
+
+Descarga e instala el binario estable más reciente de kubectl :
+
+$ curl -LO "htt‌‌ps://dl.k8s.io/release/$(curl -L -s \
+htt‌‌ps://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
+$ sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+Donde https://dl.k8s.io/release/stable.txt tiene como objetivo mostrar la última versión estable de Kubernetes.
+
+NOTA: Para descargar y configurar una versión específica de kubectl (como la v1.28.3) que sea compatible con la versión de Kubernetes del clúster Minikube, ejecute el siguiente comando:
+
+$ curl -LO ht‌‌tps://dl.k8s.io/release/v1.28.3/bin/linux/amd64/kubectl
+
+La versión instalada se puede verificar con:
+
+$ kubectl version --client
+
+Una configuración típica y útil posterior a la instalación es habilitar el autocompletado de la shell  para kubectl . Para la shell bash, esto se puede lograr ejecutando la siguiente secuencia de comandos:
+
+$ sudo apt update && sudo apt install -y  bash-completion
+
+$ source /usr/share/ bash-completion / bash_completion
+
+$  source <(kubectl completion bash)
+
+$  echo 'source <(kubectl completion bash)' >> ~/.bashrc
