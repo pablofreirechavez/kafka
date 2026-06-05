@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apache Kafka - Arquitectura Estilo Uber</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { background-color: #0f172a; margin: 0; padding: 40px 0; display: grid; gap: 40px; grid-template-columns: 1fr; place-items: center; font-family: 'Urbanist', sans-serif; }
+        
+        .slide-container { width: 1280px; height: 720px; background-color: #020617; color: #f8fafc; position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 60px; border-radius: 12px; border: 1px solid #1e293b; box-shadow: 0 20px 40px rgba(0,0,0,0.7); }
+        .slide-container::before { content: ''; position: absolute; bottom: -150px; right: -150px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(56, 189, 248, 0.05) 0%, transparent 70%); z-index: 0; pointer-events: none; }
+        
+        .slide-title { font-size: 42px; font-weight: 700; color: #38bdf8; margin-bottom: 30px; z-index: 1; text-transform: uppercase; letter-spacing: 1px; border-left: 5px solid #38bdf8; padding-left: 15px; }
+        h1 { font-size: 76px; margin: 0; color: #ffffff; font-weight: 700; text-align: center; }
+        h3 { font-size: 28px; color: #00ff88; margin-top: 0; margin-bottom: 15px; font-weight: 600; }
+        p, li { font-size: 22px; line-height: 1.5; color: #cbd5e1; z-index: 1; }
+        
+        .content-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; z-index: 1; width: 100%; }
+        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; width: 100%; align-items: center; }
+        .three-column { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; width: 100%; }
+        
+        .tile { background: #0f172a; padding: 35px; border-radius: 12px; border: 1px solid #1e293b; transition: all 0.3s ease; }
+        .tile:hover { border-color: #38bdf8; background: #1e293b; }
+        .tile .icon { font-size: 45px; color: #38bdf8; margin-bottom: 20px; }
+        
+        .bullet-list { list-style: none; padding: 0; }
+        .bullet-list li { position: relative; padding-left: 45px; margin-bottom: 25px; }
+        .bullet-list i { position: absolute; left: 0; top: 4px; color: #00ff88; font-size: 24px; }
+        
+        .code-box { background: #000000; padding: 20px; border-radius: 8px; font-family: monospace; color: #00ff88; font-size: 18px; border: 1px solid #333; margin-top: 15px; }
+        .highlight-box { background: rgba(56, 189, 248, 0.05); border: 1px dashed #38bdf8; padding: 25px; border-radius: 8px; margin-top: 20px; }
+        
+        .flow-diagram { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 20px; border-radius: 12px; margin-top: 20px; border: 1px solid #1e293b; }
+        .flow-step { text-align: center; flex: 1; }
+        .flow-arrow { color: #38bdf8; font-size: 30px; margin: 0 15px; }
+    </style>
+</head>
+<body>
+
+<!-- SLIDE 1: PORTADA -->
+<div class="slide-container" id="slide1">
+    <div class="content-area" style="text-align: center;">
+        <i class="fa-solid fa-car-side" style="font-size: 80px; color: #38bdf8; margin-bottom: 20px;"></i>
+        <h1>APACHE <span style="color: #38bdf8;">KAFKA</span></h1>
+        <p style="font-size: 34px; color: #94a3b8; margin-top: 15px;">Arquitectura en Tiempo Real: El Caso "Ride-Sharing"</p>
+        <div style="margin-top: 60px; border-top: 1px solid #1e293b; padding-top: 30px; display: inline-block; width: 60%;">
+            <p style="font-size: 24px; margin: 0; color: #ffffff;"><strong>Ing. Pablo Freire Chávez</strong></p>
+            <p style="font-size: 18px; color: #00ff88; margin: 5px 0 0 0; text-transform: uppercase; letter-spacing: 2px;">Especialista SRE & Automatización</p>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 2: EL DESAFÍO -->
+<div class="slide-container" id="slide2">
+    <h2 class="slide-title">1. El Desafío del Tiempo Real</h2>
+    <div class="content-area">
+        <p>Imagina una aplicación de transporte. Miles de conductores y pasajeros conectados simultáneamente en una ciudad.</p>
+        <div class="three-column" style="margin-top: 30px;">
+            <div class="tile">
+                <i class="fa-solid fa-location-dot icon"></i>
+                <h4 style="color: #ffffff; font-size: 22px; margin: 0;">Ubicación Continua</h4>
+                <p style="font-size: 18px;">Cada auto envía sus coordenadas GPS cada 3 segundos.</p>
+            </div>
+            <div class="tile">
+                <i class="fa-solid fa-users icon"></i>
+                <h4 style="color: #ffffff; font-size: 22px; margin: 0;">Matchmaking</h4>
+                <p style="font-size: 18px;">Conectar al usuario con el auto más cercano instantáneamente.</p>
+            </div>
+            <div class="tile">
+                <i class="fa-solid fa-chart-line icon"></i>
+                <h4 style="color: #ffffff; font-size: 22px; margin: 0;">Precios Dinámicos</h4>
+                <p style="font-size: 18px;">Calcular tarifas basándose en la demanda actual del tráfico.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 3: POR QUÉ FALLAN LAS BASES DE DATOS TRADICIONALES -->
+<div class="slide-container" id="slide3">
+    <h2 class="slide-title">2. ¿Por qué no usar MySQL o PostgreSQL?</h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div>
+                <p>Las bases de datos relacionales están diseñadas para almacenar el estado actual, no para procesar flujos masivos de eventos continuos.</p>
+                <ul class="bullet-list">
+                    <li><i class="fa-solid fa-xmark" style="color: #f43f5e;"></i> <strong>Cuellos de botella:</strong> Escribir 100,000 ubicaciones por segundo bloquea las tablas.</li>
+                    <li><i class="fa-solid fa-xmark" style="color: #f43f5e;"></i> <strong>Falta de reactividad:</strong> Las apps tendrían que consultar la base de datos constantemente ("¿Ya llegó el auto?") en lugar de recibir alertas.</li>
+                </ul>
+            </div>
+            <div class="tile" style="border-color: #f43f5e;">
+                <h3 style="color: #f43f5e;">El Patrón Anti-Patrón</h3>
+                <div class="code-box" style="color: #f43f5e; border-color: #f43f5e;">
+                    UPDATE drivers <br>
+                    SET lat = -2.189, lng = -79.889 <br>
+                    WHERE driver_id = 405; <br>
+                    -- Ejecutado millones de veces por minuto
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 4: KAFKA COMO SISTEMA NERVIOSO -->
+<div class="slide-container" id="slide4">
+    <h2 class="slide-title">3. Kafka: El Sistema Nervioso Central</h2>
+    <div class="content-area">
+        <p>En lugar de actualizar una base de datos, las aplicaciones publican un "Evento" (algo que ya ocurrió). Kafka recibe todos estos eventos y los distribuye a quienes les importe.</p>
+        <div class="flow-diagram">
+            <div class="flow-step">
+                <i class="fa-solid fa-mobile-screen" style="font-size: 50px; color: #94a3b8;"></i>
+                <p>App Conductor / Usuario</p>
+            </div>
+            <i class="fa-solid fa-arrow-right flow-arrow"></i>
+            <div class="flow-step" style="background: #1e293b; padding: 20px; border-radius: 8px;">
+                <h2 style="margin: 0; color: #38bdf8;">CLUSTER KAFKA</h2>
+            </div>
+            <i class="fa-solid fa-arrow-right flow-arrow"></i>
+            <div class="flow-step">
+                <i class="fa-solid fa-server" style="font-size: 50px; color: #00ff88;"></i>
+                <p>Microservicios (Match, Pagos, Mapa)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 5: COMPONENTES - PRODUCTORES -->
+<div class="slide-container" id="slide5">
+    <h2 class="slide-title">4. Los Productores (Producers)</h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div>
+                <p>Son los microservicios o aplicaciones móviles que generan los datos y los envían a Kafka.</p>
+                <div class="highlight-box">
+                    <strong>En nuestra App:</strong><br>
+                    - El teléfono del conductor enviando coordenadas.<br>
+                    - El teléfono del pasajero solicitando un viaje.<br>
+                    - La pasarela de pago confirmando un cobro.
+                </div>
+            </div>
+            <div class="tile">
+                <h3>Ejemplo de Evento JSON</h3>
+                <div class="code-box">
+{<br>
+&nbsp;&nbsp;"driver_id": "drv_884",<br>
+&nbsp;&nbsp;"status": "AVAILABLE",<br>
+&nbsp;&nbsp;"location": {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"lat": -2.189412,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"lon": -79.889066<br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;"timestamp": 1717554336<br>
+}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 6: COMPONENTES - TÓPICOS -->
+<div class="slide-container" id="slide6">
+    <h2 class="slide-title">5. Los Tópicos (Topics)</h2>
+    <div class="content-area">
+        <p>Un tópico es el canal o la categoría donde se envían los mensajes. Piénsalo como una tabla de base de datos, pero orientada a eventos.</p>
+        <div class="three-column" style="margin-top: 20px;">
+            <div class="tile" style="border-top: 4px solid #38bdf8;">
+                <h3>driver-locations</h3>
+                <p style="font-size: 16px;">Recibe el GPS de todos los autos cada pocos segundos. Altísimo volumen de datos.</p>
+            </div>
+            <div class="tile" style="border-top: 4px solid #00ff88;">
+                <h3>ride-requests</h3>
+                <p style="font-size: 16px;">Contiene las solicitudes de los usuarios buscando transporte.</p>
+            </div>
+            <div class="tile" style="border-top: 4px solid #f59e0b;">
+                <h3>trip-events</h3>
+                <p style="font-size: 16px;">Estados del viaje: "Iniciado", "En camino", "Finalizado".</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 7: COMPONENTES - PARTICIONES -->
+<div class="slide-container" id="slide7">
+    <h2 class="slide-title">6. Particiones (La clave de la escalabilidad)</h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div>
+                <p>Si la ciudad entera envía datos a un solo tópico, el servidor colapsaría. Kafka divide el tópico en <strong>Particiones</strong>.</p>
+                <ul class="bullet-list">
+                    <li><i class="fa-solid fa-layer-group"></i> Permite procesar datos en paralelo.</li>
+                    <li><i class="fa-solid fa-key"></i> <strong>Partition Key:</strong> Usamos el ID del conductor. Así garantizamos que todo el recorrido del Auto A vaya en orden por la misma partición.</li>
+                </ul>
+            </div>
+            <div class="tile" style="text-align: center;">
+                <h4 style="margin: 0 0 15px 0; color: #ffffff;">Tópico: driver-locations</h4>
+                <div style="background: #1e293b; padding: 10px; margin-bottom: 5px; border-radius: 4px;">Partición 0 (Conductores Norte)</div>
+                <div style="background: #1e293b; padding: 10px; margin-bottom: 5px; border-radius: 4px;">Partición 1 (Conductores Centro)</div>
+                <div style="background: #1e293b; padding: 10px; border-radius: 4px;">Partición 2 (Conductores Sur)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 8: COMPONENTES - CONSUMIDORES -->
+<div class="slide-container" id="slide8">
+    <h2 class="slide-title">7. Los Consumidores (Consumers)</h2>
+    <div class="content-area">
+        <p>Servicios backend que se suscriben a los tópicos y reaccionan en tiempo real. Un mismo mensaje puede ser leído por múltiples servicios sin borrarse.</p>
+        <div class="highlight-box">
+            <h3 style="margin-top: 0;">Evento: Viaje Finalizado en `trip-events`</h3>
+            <p>1. <strong>Servicio de Cobro:</strong> Lee el evento y hace el cargo a la tarjeta.<br>
+               2. <strong>Servicio de Reputación:</strong> Habilita la pantalla para calificar al conductor.<br>
+               3. <strong>Servicio de Notificación:</strong> Envía el recibo por correo.</p>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 9: FLUJO PASO A PASO - PARTE 1 -->
+<div class="slide-container" id="slide9">
+    <h2 class="slide-title">8. Flujo Real: Solicitando el Viaje</h2>
+    <div class="content-area">
+        <div class="flow-diagram" style="padding: 40px;">
+            <div class="flow-step">
+                <i class="fa-solid fa-user" style="font-size: 40px; color: #38bdf8;"></i>
+                <p>Usuario presiona<br>"Pedir Auto"</p>
+            </div>
+            <i class="fa-solid fa-arrow-right flow-arrow"></i>
+            <div class="flow-step">
+                <div class="code-box" style="font-size: 14px; text-align: left;">
+                    PRODUCER publica en:<br>
+                    Topic: <strong>ride-requests</strong><br>
+                    Data: {user_id, lat, lng}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 10: FLUJO PASO A PASO - PARTE 2 -->
+<div class="slide-container" id="slide10">
+    <h2 class="slide-title">9. Flujo Real: El Matchmaking Engine</h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div>
+                <p>El motor de emparejamiento (Consumer) necesita saber dos cosas al mismo tiempo:</p>
+                <ol>
+                    <li>Quién pide el viaje (lee <code>ride-requests</code>).</li>
+                    <li>Dónde están los autos (lee <code>driver-locations</code>).</li>
+                </ol>
+                <p>Cruza ambos streams en tiempo real (KStreams), calcula distancias, y emite un nuevo evento al tópico <code>driver-dispatch</code>.</p>
+            </div>
+            <div class="tile">
+                <i class="fa-solid fa-code-merge icon"></i>
+                <h3>Stream Processing</h3>
+                <p style="font-size: 16px;">Procesamiento de datos en pleno vuelo sin tocar una base de datos estática.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 11: FLUJO PASO A PASO - PARTE 3 -->
+<div class="slide-container" id="slide11">
+    <h2 class="slide-title">10. Flujo Real: Tarifa Dinámica (Surge Pricing)</h2>
+    <div class="content-area">
+        <p>¿Cómo sabe la app cuándo subir el precio porque está lloviendo o hay un concierto?</p>
+        <div class="highlight-box">
+            <ul class="bullet-list">
+                <li><i class="fa-solid fa-calculator"></i> Un servicio cuenta cuántos mensajes entran a <code>ride-requests</code> (alta demanda).</li>
+                <li><i class="fa-solid fa-car"></i> Cuenta cuántos autos con estado "AVAILABLE" hay en <code>driver-locations</code> (baja oferta).</li>
+                <li><i class="fa-solid fa-bolt"></i> Si la demanda supera a la oferta, publica un multiplicador de tarifa en <code>pricing-updates</code> instantáneamente.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 12: EL VIAJE EN VIVO -->
+<div class="slide-container" id="slide12">
+    <h2 class="slide-title">11. El Viaje en Vivo (Live Tracking)</h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div class="tile">
+                <h3>El Auto (Productor)</h3>
+                <p>Mientras vas en el viaje, el auto sigue enviando su posición a <code>driver-locations</code>.</p>
+            </div>
+            <div class="tile">
+                <h3>App de tu familiar (Consumidor)</h3>
+                <p>Si compartiste tu viaje, la app de tu familiar se suscribe a ese flujo y pinta el carrito en el mapa en tiempo real a través de WebSockets alimentados por Kafka.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 13: TOLERANCIA A FALLOS -->
+<div class="slide-container" id="slide13">
+    <h2 class="slide-title">12. Tolerancia a Fallos (Replicación)</h2>
+    <div class="content-area">
+        <p>¿Qué pasa si el servidor de Kafka que guarda tu viaje se quema justo a la mitad del trayecto?</p>
+        <div class="two-column" style="margin-top: 20px;">
+            <div>
+                <ul class="bullet-list">
+                    <li><i class="fa-solid fa-copy"></i> Kafka usa el modelo <strong>Leader - Follower</strong>.</li>
+                    <li><i class="fa-solid fa-check"></i> Si el Broker líder cae, un servidor seguidor que tiene una copia exacta asume el mando en milisegundos.</li>
+                </ul>
+            </div>
+            <div class="code-box" style="font-size: 16px;">
+                Replication Factor = 3<br><br>
+                Broker 1: Partición 0 (Líder)<br>
+                Broker 2: Partición 0 (Réplica oculta)<br>
+                Broker 3: Partición 0 (Réplica oculta)
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 14: RETENCIÓN DE DATOS -->
+<div class="slide-container" id="slide14">
+    <h2 class="slide-title">13. Análisis y Retención de Datos</h2>
+    <div class="content-area">
+        <div class="two-column">
+            <div>
+                <p>Kafka no solo es para el instante, también almacena el historial. Configurando la <strong>Retención</strong> a 7 días, o conectando <strong>Kafka Connect</strong>.</p>
+                <p>Podemos vaciar todos esos millones de rutas GPS al final del día hacia un Data Lake (S3 / Hadoop).</p>
+            </div>
+            <div class="tile">
+                <i class="fa-solid fa-brain icon" style="color: #a855f7;"></i>
+                <h3 style="color: #a855f7;">Machine Learning</h3>
+                <p style="font-size: 16px;">Los científicos de datos leen ese historial para entrenar modelos que predigan dónde habrá más tráfico mañana.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 15: CONCLUSIONES Y CIERRE -->
+<div class="slide-container" id="slide15" style="background: linear-gradient(135deg, #020617 0%, #0f172a 100%);">
+    <div class="content-area" style="text-align: center;">
+        <h2 class="slide-title" style="border: none; padding: 0; margin-bottom: 10px;">14. Conclusión</h2>
+        <p style="font-size: 26px; color: #cbd5e1; max-width: 900px; margin: 0 auto 50px auto;">
+            Kafka permite que arquitecturas complejas como el Ride-Sharing sean <strong>escalables, desacopladas y reaccionen en tiempo real</strong>. Es el puente entre los eventos físicos y la lógica digital.
+        </p>
+        
+        <h1 style="font-size: 60px; color: #38bdf8;">¿PREGUNTAS SOBRE EL CÓDIGO O LA ARQUITECTURA?</h1>
+        <div style="margin-top: 60px;">
+            <p style="font-size: 24px; margin: 0; color: #ffffff;"><strong>Ing. Pablo Freire Chávez</strong></p>
+            <p style="font-size: 18px; color: #00ff88; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px;">Especialista SRE & Automatización</p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

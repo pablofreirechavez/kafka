@@ -1,0 +1,70 @@
+# Proyecto: Apache Kafka para Principiantes - El Sistema Nervioso de los Datos
+
+Este proyecto contiene los recursos, la estructura y el codigo visual de la presentacion diseñada para introducir a perfiles no tecnicos o principiantes al mundo de Apache Kafka y el procesamiento de datos en tiempo real (Event Streaming).
+
+La presentacion fue creada utilizando un enfoque de diseño corporativo, ideal para dar charlas, workshops o introducciones rapidas en equipos de ingenieria y negocio.
+
+---
+
+## Estado del Expositor y Acreditacion
+
+Este contenido ha sido estructurado y validado bajo los estandares oficiales de Confluent.
+* Expositor: Pablo Freire Chávez
+* Acreditacion: Confluent Apache Kafka Fundamentals Accredited
+* Score obtenido: 87.8%
+
+---
+
+## Estructura del Proyecto
+
+El repositorio mantiene una estructura limpia, modular y desacoplada, siguiendo las mejores practicas de desarrollo web para presentaciones auto-contenidas:
+
+├── .gitignore               # Archivos y carpetas ignoradas por Git
+├── README.md                # Documentacion principal del proyecto (este archivo)
+└── docs/                    # Contenedor de la presentacion y recursos estaticos
+    ├── introduccion_kafka_dummies.html  # Archivo principal de la presentacion (HTML5/CSS3)
+    └── assets/              # Recursos visuales e imagenes de apoyo
+
+---
+
+## Contenido de la Presentacion
+
+La charla esta dividida en 4 bloques estrategicos estructurados para mantener la retencion de la audiencia:
+
+1. Introduccion y Analogias: Pasamos del concepto estatico de Base de Datos al concepto dinamico del "Cartero 2.0" o "Tuberias inteligentes".
+2. Componentes Clave: Explicacion sencilla de que son los Productores, Consumidores, Topicos, Brokers y Particiones.
+3. Casos de Uso del Mundo Real:
+   * Deteccion de Fraude Bancario: Como se analiza un pago en menos de 100 milisegundos.
+   * E-commerce: La sincronizacion en paralelo de Inventario, Logistica y Notificaciones al comprar un producto en linea.
+4. Metricas e Impacto: Por que las empresas modernas dependen de esta arquitectura hoy en día.
+
+---
+
+## Tecnologias Utilizadas
+
+* HTML5 y CSS3 Semantico: Estructura pura sin necesidad de frameworks pesados de diapositivas, garantizando que corra en cualquier navegador instantaneamente.
+* Google Fonts (Urbanist): Tipografia moderna y de alta legibilidad para pantallas de proyeccion.
+* FontAwesome v6.5.1: Iconografia vectorial limpia para soporte visual de los conceptos abstractos.
+
+---
+
+## Como Ejecutar la Presentacion
+
+Al estar construida con tecnologias web nativas, no necesitas instalar servidores locales ni dependencias complejas.
+
+1. Clona este repositorio en tu maquina local:
+   git clone https://github.com/tu-usuario/tu-repositorio.git
+
+2. Entra a la carpeta del proyecto:
+   cd tu-repositorio/docs
+
+3. Abre el archivo "introduccion_kafka_dummies.html" en tu navegador web (Chrome, Brave, Edge o Safari). ¡Listo para proyectar!
+
+---
+
+## Contacto y Feedback
+
+Si tienes dudas sobre como desplegar esta presentacion en tu empresa o comunidad, o quieres profundizar en los conceptos de la acreditacion de Confluent, no dudes en contactarme:
+
+* Ponente: Pablo Freire Chávez
+* Credencial oficial: Verificable en la plataforma de certificados de Confluent
